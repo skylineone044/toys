@@ -1,5 +1,5 @@
-from os import device_encoding
 import numpy
+import math as m
 from functools import wraps
 import time as time_time
 import multiprocessing
@@ -71,6 +71,24 @@ def mandelbrot(*args):
     return out_array
 
 
+@cuda.jit(device=True)
+def paralel_mandelbrot(x_nums, y_nums, out_array):
+    for i, x in enumerate(x_nums):
+        for j, y in enumerate(y_nums):
+            z = complex(0, 0)
+            c = complex(y, x)
+            iterations = 0
+
+            while abs(z) <= MAX_Z and iterations < MAX_ITERATIONS:
+                z = z ** 2 + c
+                iterations += 1
+
+            out_array[j, i] = min(
+                int(((iterations / MAX_ITERATIONS) * BRIGHTNESS)), 254
+            )
+    return out_array
+
+
 def mp_handler(*args):
     (
         sum_array,
@@ -93,7 +111,9 @@ def mp_handler(*args):
         sub_array = sum_array[:, slice_start : slice_start + slice_width]
         slice_IDs.append(
             (
-                numpy.linspace(c_ranges[i], c_ranges[i] + range_width, num=sub_array.shape[1]),
+                numpy.linspace(
+                    c_ranges[i], c_ranges[i] + range_width, num=sub_array.shape[1]
+                ),
                 numpy.linspace(boundary_y_min, boundary_y_max, num=sub_array.shape[0]),
                 sub_array,  # result array
             )
@@ -113,17 +133,33 @@ def mp_handler(*args):
     return sum_array
 
 
+@cuda.jit
+def make_it_go(lin1, lin2, arr):
+    paralel_mandelbrot(lin1, lin2, arr)
+
+
 def render(center=(-0.5, 0), r=1.2):
     print("rendering...")
     zero_arr = numpy.zeros((HEIGHT, WIDTH))
 
-    frame_array = mp_handler(
-        zero_arr,  # starting array
-        15,  # thread cound
-        (WIDTH, HEIGHT),  # result resolution in pixels
-        (center[0] - r, center[0] + r),  # (boundary_y_min, boundary_y_max)
-        (center[1] - r, center[1] + r),  # (boundary_x_min, boundary_x_max)
-    ).astype(numpy.uint8)
+    # frame_array = mp_handler(
+    #     zero_arr,  # starting array
+    #     15,  # thread cound
+    #     (WIDTH, HEIGHT),  # result resolution in pixels
+    #     (center[0] - r, center[0] + r),  # (boundary_y_min, boundary_y_max)
+    #     (center[1] - r, center[1] + r),  # (boundary_x_min, boundary_x_max)
+    # ).astype(numpy.uint8)
+
+    threadsperblock = (32, 32)
+    blockspergrid_x = m.ceil(zero_arr.shape[0] / threadsperblock[0])
+    blockspergrid_y = m.ceil(zero_arr.shape[1] / threadsperblock[1])
+    blockspergrid = (blockspergrid_x, blockspergrid_y)
+
+    frame_array = make_it_go[blockspergrid, threadsperblock](
+        numpy.linspace(center[0] - r, center[0] + r, num=zero_arr.shape[1]),
+        numpy.linspace(center[1] - r, center[1] + r, num=zero_arr.shape[0]),
+        zero_arr,
+    )
     color_array = numpy.zeros((*frame_array.shape, 3), dtype=numpy.uint8)
     numpy.take(LUT, frame_array, axis=0, out=color_array)
 
@@ -166,7 +202,7 @@ def main():
 
         screen.blit(surface, (0, 0))
         pygame.display.flip()
-        pygame.time.delay(10)
+        pygame.time.delay(100)
 
 
 if __name__ == "__main__":
