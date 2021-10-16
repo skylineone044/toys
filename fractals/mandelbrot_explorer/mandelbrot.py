@@ -1,3 +1,4 @@
+from os import device_encoding
 import numpy
 from functools import wraps
 import time as time_time
@@ -8,11 +9,16 @@ import pygame
 from pygame import *
 from pygame.locals import *
 
+from numba import cuda
+
 BRIGHTNESS = 255
 MAX_Z = 2
 MAX_ITERATIONS = 80
 WIDTH = 700
 HEIGHT = 700
+
+MOVEMENT_SPEED = 0.2
+ZOOM_SPEED = 0.3
 
 # cmap = cm.get_cmap("gnuplot2")
 # cool colors: "YlGnBu", "gnuplot2","inferno","gist_earth","cubehelix",
@@ -40,24 +46,17 @@ def timeit(
     return timeit_wrapper
 
 
-# @timeit
 def mandelbrot(*args):
     (
-        boundary_x_min,  # start of the slice in the complex plane
-        boundary_x_max,  # width of the slice in teh complex plane
-        boundary_y_min,  # bottom and top of boundary in the complex plane
-        boundary_y_max,
+        x_nums,
+        y_nums,
         out_array,  # result array
     ) = args
 
     # print(out_array.shape)
-    for i, x in enumerate(
-        numpy.linspace(boundary_x_min, boundary_x_max, num=out_array.shape[1])
-    ):
+    for i, x in enumerate(x_nums):
         # print(f"{i=}/{out_array.shape[1]}", end="    \r")
-        for j, y in enumerate(
-            numpy.linspace(boundary_y_min, boundary_y_max, num=out_array.shape[0])
-        ):
+        for j, y in enumerate(y_nums):
             z = complex(0, 0)
             c = complex(y, x)
             iterations = 0
@@ -91,13 +90,12 @@ def mp_handler(*args):
     for i in range(threads):
         slice_start = i * (res_width // threads)
         slice_width = res_width // threads
+        sub_array = sum_array[:, slice_start : slice_start + slice_width]
         slice_IDs.append(
             (
-                c_ranges[i],  # start of the slice in the complex plane
-                c_ranges[i] + range_width,  # width of the slice in teh complex plane
-                boundary_y_min,  # bottom and top of boundary in the complex plane
-                boundary_y_max,
-                sum_array[:, slice_start : slice_start + slice_width],  # result array
+                numpy.linspace(c_ranges[i], c_ranges[i] + range_width, num=sub_array.shape[1]),
+                numpy.linspace(boundary_y_min, boundary_y_max, num=sub_array.shape[0]),
+                sub_array,  # result array
             )
         )
     # print(slice_IDs)
@@ -121,7 +119,7 @@ def render(center=(-0.5, 0), r=1.2):
 
     frame_array = mp_handler(
         zero_arr,  # starting array
-        50,  # thread cound
+        15,  # thread cound
         (WIDTH, HEIGHT),  # result resolution in pixels
         (center[0] - r, center[0] + r),  # (boundary_y_min, boundary_y_max)
         (center[1] - r, center[1] + r),  # (boundary_x_min, boundary_x_max)
@@ -151,18 +149,18 @@ def main():
                 quit()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
-                    center[1] -= 0.05 * r
+                    center[1] -= MOVEMENT_SPEED * r
                 elif event.key == pygame.K_s:
-                    center[1] += 0.05 * r
+                    center[1] += MOVEMENT_SPEED * r
                 elif event.key == pygame.K_a:
-                    center[0] -= 0.05 * r
+                    center[0] -= MOVEMENT_SPEED * r
                 elif event.key == pygame.K_d:
-                    center[0] += 0.05 * r
+                    center[0] += MOVEMENT_SPEED * r
 
                 elif event.key == pygame.K_KP_PLUS:
-                    r *= 0.9
+                    r *= 1 - ZOOM_SPEED
                 elif event.key == pygame.K_KP_MINUS:
-                    r *= 1.1
+                    r *= 1 + ZOOM_SPEED
 
                 surface = render(center, r)
 
