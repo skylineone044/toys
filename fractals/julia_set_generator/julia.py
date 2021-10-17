@@ -32,8 +32,10 @@ THREADS = (
 PATH = str(pathlib.Path(__file__).parent.resolve()) + "/julia.pgm"
 
 
-WIDTH = 2000
-HEIGHT = 1294
+# WIDTH = 50000
+# HEIGHT = 32352
+WIDTH = 34000
+HEIGHT = 22000
 C = complex(-0.8, 0.156)
 
 MAX_Z = 5
@@ -45,8 +47,8 @@ BOUNTARY_Y = 1.1
 BRIGHTNESS = 255
 
 # cmap = cm.get_cmap("gnuplot2")
-# cool colors: "YlGnBu", "gnuplot2","inferno","gist_earth","cubehelix",
-cmap = cm.get_cmap("gnuplot2")
+# cool colors: "YlGnBu", "gnuplot2","inferno","gist_earth","cubehelix", "tab20c"
+cmap = cm.get_cmap("tab20c")
 LUT = []
 for i in range(BRIGHTNESS):
     LUT.append(cmap(i / BRIGHTNESS, bytes=True)[:3])
@@ -210,10 +212,10 @@ def single_image():
 if __name__ == "__main__":
     pass
     # make it go
-    # single_image()
+    single_image()
     # anim_ft(240, complex(0, -0.8), complex(-0.8, 0.156))
     # anim_circle(1024, 0.75)
-    anim_circle(1024, 0.7885)
+    # anim_circle(1024, 0.7885)
 
 #       ████████
 #     ██▒▒▒▒▒▒▒▒▒▒██
