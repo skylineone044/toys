@@ -16,19 +16,19 @@ def parse(inputFileName: str) -> str:
     with open(inputFileName, "r") as inputFile:
         file = inputFile.read()
         file = re.sub(
-            "\\/\\*[\\s\\S]*\\*\\/", " ", file
+            "\\/\\*[\\s\\S]*\\*\\/", "\n", file
         )  # replace multiline comments wit ha " "
-        file = re.sub("\\/\\/.+$", " ", file)  # replace comments wit ha " "
+        file = re.sub("\\/\\/.+$", "\n", file)  # replace comments wit ha " "
+
+        stringMatcher = re.compile("\".*?\"")
 
         lines = file.split("\n")
 
-        multi_line_comment_in_progress = False
         word_dividers = ("(", ")", ",", "{", "}", "[", "]", ";", "*", "/", "+", "-")
 
         # single line comments and empty lines
         while len(lines) > 0:
             line = lines[0]
-            print(line)
 
             # wider
             for orig, expanded in [
@@ -37,25 +37,13 @@ def parse(inputFileName: str) -> str:
                 if '"' not in line and "'" not in line:
                     line = line.replace(orig, expanded)
                 else:
-                    l_i_n_e = list(line)
-                    line = ""
-                    string = ""
-                    in_str = False
-                    for letter in l_i_n_e:
-                        if letter == '"':
-                            in_str = not in_str
-                            if not in_str:
-                                preprocessor_defines[e_len * LETTER] = f'{string}"'
-                                line += f" {e_len * LETTER} "
-                                e_len += 1
-                                string = ""
-                        if not in_str:
-                            if letter in word_dividers:
-                                line += f" {letter} "
-                            else:
-                                line += letter
-                        else:
-                            string += letter
+                    while '"' in line:
+                        strings = stringMatcher.findall(line)
+                        for string in strings:
+                            preprocessor_defines[e_len * LETTER] = string
+                            line = line.replace(string, e_len * LETTER)
+                            e_len += 1
+
 
             if line.startswith("#"):
                 code += line
@@ -63,6 +51,7 @@ def parse(inputFileName: str) -> str:
                 code += line
 
             del lines[0]
+            print(line)
 
     print(str(preprocessor_defines))
     return code

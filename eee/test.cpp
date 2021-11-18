@@ -1,11 +1,13 @@
 // ez egy komment
-#include <stdio.h>
+#include <iostream>
+
+using namespace std;
 
 int main(int argc, char **argv) { /*ez
      egy
      tobb
      soros
      komment
-     */ printf("Hello World!(bean)\n");
+     */ cout << "Hello World!(bean)\n" << "nice\n";
     return 0;
 }
