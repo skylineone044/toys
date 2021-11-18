@@ -6,6 +6,6 @@ int main(int argc, char **argv) { /*ez
      tobb
      soros
      komment
-     */ printf("Hello World!\n");
+     */ printf("Hello World!(bean)\n");
     return 0;
 }
