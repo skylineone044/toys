@@ -20,7 +20,7 @@ def generate_e(original: str) -> str:
             if original not in PREPROCESSOR_DEFINES.keys()
             else PREPROCESSOR_DEFINES[original]
         )
-        print(f"replacing {original} with {PREPROCESSOR_DEFINES[original]}")
+        # print(f"replacing {original} with {PREPROCESSOR_DEFINES[original]}")
         return PREPROCESSOR_DEFINES[original]
     else:
         return original
@@ -34,21 +34,23 @@ def remove_comments(input: str) -> str:
     return res
 
 
-def convert_strings(input: str) -> str:
+def convert_strings(input: str, string_regex: str, padding: str = "") -> str:
     res: str = ""
-    string_regex: str = '(".*?")'
+    # string_regex: str = '(".*?")'
     stringMatcher = re.compile(string_regex)
 
     for line in input.split("\n"):
-        strings = re.findall(stringMatcher, line)
-        if len(strings) > 0:
-            for string in strings:
-                # string = codecs.decode(string, "unicode_escape")
-                line: str = line.replace(string, generate_e(string))
+        if line.startswith("#"):
+            res += line + "\n"
+        else:
+            strings = re.findall(stringMatcher, line)
+            if len(strings) > 0:
+                for string in strings:
+                    # string = codecs.decode(string, "unicode_escape")
+                    line: str = line.replace(string, f"{padding}{generate_e(string)}{padding}")
 
-        res += line + "\n"
+            res += line + "\n"
     return res
-
 
 def parse(inputFileName: str) -> str:
 
@@ -56,37 +58,11 @@ def parse(inputFileName: str) -> str:
 
     with open(inputFileName, "r") as inputFile:
         file = remove_comments(inputFile.read())
-        file = convert_strings(file)
+        file = convert_strings(file, '(".*?")')   # replace strng literals
+        file = convert_strings(file, "[\\w\\d]+")    # replace words
+        # file = convert_strings(file, "[^\\w^\\s]+", padding=" ")    # replace punctuation and other characters
+
         print(file)
-
-        lines = file.split("\n")
-
-        word_dividers = (
-            "(",
-            ")",
-            ",",
-            "{",
-            "}",
-            "[",
-            "]",
-            ";",
-            "*",
-            "/",
-            "+",
-            "-",
-            "<<",
-            ">>",
-            "<",
-            ">",
-            "==",
-            "=",
-            ">=",
-            "<=",
-        )
-        wide_word_dividers = ("<<", ">>", "==", ">=", "<=")
-
-        dividers = "([\\[\\]{}(),;*-+<>=]{1,2})"
-
     print(str(PREPROCESSOR_DEFINES))
     return code
 
