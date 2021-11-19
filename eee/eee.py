@@ -2,7 +2,6 @@
 
 import sys
 import re
-import codecs
 
 
 LETTER = "e"
@@ -20,7 +19,6 @@ def generate_e(original: str) -> str:
             if original not in PREPROCESSOR_DEFINES.keys()
             else PREPROCESSOR_DEFINES[original]
         )
-        # print(f"replacing {original} with {PREPROCESSOR_DEFINES[original]}")
         return PREPROCESSOR_DEFINES[original]
     else:
         return original
@@ -34,47 +32,52 @@ def remove_comments(input: str) -> str:
     return res
 
 
-def convert_strings(input: str, string_regex: str, padding: str = "") -> str:
+def convert(input: str, regex: str, padding: str = "") -> str:
     res: str = ""
-    # string_regex: str = '(".*?")'
-    stringMatcher = re.compile(string_regex)
+    matcher = re.compile(regex)
 
     for line in input.split("\n"):
         if line.startswith("#"):
             res += line + "\n"
         else:
-            strings = re.findall(stringMatcher, line)
+            strings = re.findall(matcher, line)
             if len(strings) > 0:
-                print(f"found: {strings}")
                 for string in strings:
-                    # string = codecs.decode(string, "unicode_escape")
-                    print(f"  replacing: {string} -> {f'{padding}{generate_e(string)}{padding}'}")
-                    line: str = line.replace(string, f"{padding}{generate_e(string)}{padding}")
-
+                    line: str = line.replace(
+                        string, f"{padding}{generate_e(string)}{padding}"
+                    )
             res += line + "\n"
     return res
 
+
 def parse(inputFileName: str) -> str:
-
-    code: str = ""
-
     with open(inputFileName, "r") as inputFile:
         file = remove_comments(inputFile.read())
-        file = convert_strings(file, '(".*?")')   # replace strng literals
-        file = convert_strings(file, "[\\w\\d]+")    # replace words
-        file = convert_strings(file, "[^\\w^\\s]+", padding=" ")    # replace punctuation and other characters
+        file = convert(file, '(".*?")')  # replace strng literals
+        file = convert(file, "[\\w\\d]+")  # replace words
+        file = convert(
+            file, "[^\\w^\\s]+", padding=" "
+        )  # replace punctuation and other characters
 
-    code: str = "".join([f"#define {e_word} {original}\n" for original, e_word in PREPROCESSOR_DEFINES.items()])
+    code: str = "".join(
+        [
+            f"#define {e_word} {original}\n"
+            for original, e_word in PREPROCESSOR_DEFINES.items()
+        ]
+    )
     code += file
     return code
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Not enough arguments!", file=sys.stderr)
+        exit(2)
     inputFileName = sys.argv[1]
     outputFileName = sys.argv[2]
 
     if inputFileName == outputFileName:
-        print("No overwriting")
+        print("No overwriting", file=sys.stderr)
         exit(1)
 
     with open(outputFileName, "w") as outputFile:
