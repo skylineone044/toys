@@ -26,7 +26,7 @@ def generate_e(original: str) -> str:
 
 def remove_comments(input: str) -> str:
     res: str = re.sub(
-        "\\/\\*[\\s\\S]*\\*\\/", "\n", input
+        "\\/\\*[\\s\\S]*?\\*\\/", "\n", input
     )  # replace multiline comments with a "\n"
     res: str = re.sub("\\/\\/.*", " ", res)  # replace comments with a " "
     return res
@@ -36,17 +36,15 @@ def convert(input: str, regex: str, padding: str = "") -> str:
     res: str = ""
     matcher = re.compile(regex)
 
-    for line in input.split("\n"):
-        if line.startswith("#"):
-            res += line + "\n"
-        else:
+    for i, line in enumerate(input.split("\n")):
+        if not line.strip().startswith("#"):
             strings = re.findall(matcher, line)
             if len(strings) > 0:
                 for string in strings:
                     line: str = line.replace(
                         string, f"{padding}{generate_e(string)}{padding}"
                     )
-            res += line + "\n"
+        res += line + "\n"
     return res
 
 
