@@ -2,6 +2,7 @@
 
 import sys
 import re
+import codecs
 
 
 LETTER = "e"
@@ -19,6 +20,7 @@ def generate_e(original: str) -> str:
             if original not in PREPROCESSOR_DEFINES.keys()
             else PREPROCESSOR_DEFINES[original]
         )
+        print(f"replacing {original} with {PREPROCESSOR_DEFINES[original]}")
         return PREPROCESSOR_DEFINES[original]
     else:
         return original
@@ -34,13 +36,15 @@ def remove_comments(input: str) -> str:
 
 def convert_strings(input: str) -> str:
     res: str = ""
-    stringMatcher = re.compile('(".*?")')
+    string_regex: str = '(".*?")'
+    stringMatcher = re.compile(string_regex)
 
     for line in input.split("\n"):
         strings = re.findall(stringMatcher, line)
         if len(strings) > 0:
             for string in strings:
-                line.replace(string, generate_e(string))
+                # string = codecs.decode(string, "unicode_escape")
+                line: str = line.replace(string, generate_e(string))
 
         res += line + "\n"
     return res
