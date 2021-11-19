@@ -43,15 +43,6 @@ def generate_tokens(input: str, regex: str) -> None:
                 generate_e(string)
 
 
-def escape(token: str) -> str:
-    return "".join(
-        [
-            f"\\{letter}" if not letter.isalpha() and not letter.isnumeric() else letter
-            for letter in list(token)
-        ]
-    )
-
-
 def convert(input: str, padding: str = " ") -> str:
     tokens: list = list(PREPROCESSOR_DEFINES.keys())
     tokens.sort(reverse=True, key=len)
@@ -70,6 +61,7 @@ def convert(input: str, padding: str = " ") -> str:
 
 
 def assert_handler(input: str) -> str:
+    # matches the content of the assert call: assert(<this_part>);
     regex_asster_content = "(?<=assert\\().*(?=\\);)"
 
     res: str = ""
@@ -85,16 +77,18 @@ def parse(inputFileName: str) -> str:
     with open(inputFileName, "r") as inputFile:
         file = remove_comments(inputFile.read())
 
-        regex_string = '(".*?")'
+        regex_string = '(".*?")'  # matches string literals
         regex_words = "([\\w\\d]+)"
         regex_symbols = "([^\\w^\\s]+)"
 
-        generate_tokens(file, regex_string)
-        file = convert(file, padding=" ")
-        generate_tokens(file, regex_words)
-        file = convert(file, padding=" ")
-        generate_tokens(file, regex_symbols)
-        file = convert(file, padding=" ")
+        generate_tokens(file, regex_string)  # get string literal conversions to eee
+        file = convert(file, padding=" ")  # do the conversion
+        generate_tokens(file, regex_words)  # get the word conversions
+        file = convert(file, padding=" ")  # do the conversion
+        generate_tokens(
+            file, regex_symbols
+        )  # get the symbol conversions (parens, +, -, <<, etc)
+        file = convert(file, padding=" ")  # do the conversion
 
         file = assert_handler(file)
 
