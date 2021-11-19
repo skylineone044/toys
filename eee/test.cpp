@@ -8,6 +8,6 @@ int main(int argc, char **argv) { /*ez
      tobb
      soros
      komment
-     */ cout << "Hello World!(bean)\n" << "nice\n";
+     */ cout << "Hello World!(bean)\n"<<"nice\n";
     return 0;
 }
