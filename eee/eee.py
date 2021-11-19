@@ -6,7 +6,7 @@ import re
 
 LETTER = "e"
 PREPROCESSOR_DEFINES: dict = {}
-PREPROCESSOR_BLACKLIST = ("assert")
+PREPROCESSOR_BLACKLIST = "assert"
 
 
 def e_word(word: str) -> bool:
@@ -52,14 +52,14 @@ def escape(token: str) -> str:
     )
 
 
-def convert(input: str, padding: str) -> str:
+def convert(input: str, padding: str = " ") -> str:
     tokens: list = list(PREPROCESSOR_DEFINES.keys())
     tokens.sort(reverse=True, key=len)
 
     res: str = ""
 
     for line in input.split("\n"):
-        if not line.strip().startswith("#"):
+        if not line.strip().startswith("#") and not line.strip().startswith("assert"):
             for token in tokens:
                 line = line.replace(
                     token, f"{padding}{PREPROCESSOR_DEFINES[token]}{padding}"
@@ -70,10 +70,15 @@ def convert(input: str, padding: str) -> str:
 
 
 def assert_handler(input: str) -> str:
+    regex_asster_content = "(?<=assert\\().*(?=\\);)"
+
+    res: str = ""
     for line in input.split("\n"):
         if line.strip().startswith("assert"):
-            # line =
-            # fix assert
+            content = re.findall(regex_asster_content, line)
+            line = line.replace(content[0], convert(content[0]))
+        res += line + "\n"
+    return res
 
 
 def parse(inputFileName: str) -> str:
@@ -90,6 +95,8 @@ def parse(inputFileName: str) -> str:
         file = convert(file, padding=" ")
         generate_tokens(file, regex_symbols)
         file = convert(file, padding=" ")
+
+        file = assert_handler(file)
 
     code = "".join(
         [
