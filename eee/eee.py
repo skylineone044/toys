@@ -14,6 +14,10 @@ def e_word(word: str) -> bool:
 
 
 def generate_e(original: str) -> str:
+    """generates an eee token for a given string input, with each string having
+    a longer and longer eee counterpart given ot it, and stored in PREPROCESSOR_DEFINES
+    input tokens already made up of just e are not modified, and are stored as is
+    """
     if not e_word(original) and original not in PREPROCESSOR_BLACKLIST:
         PREPROCESSOR_DEFINES[original] = (
             (len(PREPROCESSOR_DEFINES) + 1) * LETTER
@@ -26,15 +30,8 @@ def generate_e(original: str) -> str:
         return original
 
 
-def remove_comments(input: str) -> str:
-    res: str = re.sub(
-        "\\/\\*[\\s\\S]*?\\*\\/", "\n", input
-    )  # replace multiline comments with a "\n"
-    res: str = re.sub("\\/\\/.*", " ", res)  # replace comments with a " "
-    return res
-
-
 def generate_tokens(input: str, regex: str) -> None:
+    """generates eee tokens for the entire text input"""
     matcher = re.compile(regex)
     for line in input.split("\n"):
         if not line.strip().startswith("#"):
@@ -43,7 +40,18 @@ def generate_tokens(input: str, regex: str) -> None:
                 generate_e(string)
 
 
+def remove_comments(input: str) -> str:
+    """remove comments, because they are not needed"""
+    res: str = re.sub(
+        "\\/\\*[\\s\\S]*?\\*\\/", "\n", input
+    )  # replace multiline comments with a "\n"
+    res: str = re.sub("\\/\\/.*", " ", res)  # replace comments with a " "
+    return res
+
+
 def convert(input: str, padding: str = " ") -> str:
+    """replaces all possible tokens in the input using the PREPROCESSOR_DEFINES
+    dict as a lookup table of already generated tokens"""
     tokens: list = list(PREPROCESSOR_DEFINES.keys())
     tokens.sort(reverse=True, key=len)
 
@@ -61,6 +69,10 @@ def convert(input: str, padding: str = " ") -> str:
 
 
 def assert_handler(input: str) -> str:
+    """the assert calls are actually preprocessor macros, so its hard to
+    re-define them, so I just leave them as is, only replaring what is inside
+    them
+    """
     # matches the content of the assert call: assert(<this_part>);
     regex_asster_content = "(?<=assert\\().*(?=\\);)"
 
@@ -74,6 +86,16 @@ def assert_handler(input: str) -> str:
 
 
 def parse(inputFileName: str) -> str:
+    """main part, everything gets started here:
+    it reads the input file
+    generates tokens and the replaces:
+        string literals
+        words
+        symbols
+    in that order,
+    then handles the assert preprocessor calls,
+    then it glues the whole text back together
+    """
     with open(inputFileName, "r") as inputFile:
         file = remove_comments(inputFile.read())
 
