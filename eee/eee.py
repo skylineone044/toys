@@ -10,7 +10,7 @@ PREPROCESSOR_DEFINES: dict = {}
 
 
 def e_word(word: str) -> bool:
-    return set(list(word)) == set(word[0])
+    return set(list(word)) == set(LETTER)
 
 
 def generate_e(original: str) -> str:
@@ -45,8 +45,10 @@ def convert_strings(input: str, string_regex: str, padding: str = "") -> str:
         else:
             strings = re.findall(stringMatcher, line)
             if len(strings) > 0:
+                print(f"found: {strings}")
                 for string in strings:
                     # string = codecs.decode(string, "unicode_escape")
+                    print(f"  replacing: {string} -> {f'{padding}{generate_e(string)}{padding}'}")
                     line: str = line.replace(string, f"{padding}{generate_e(string)}{padding}")
 
             res += line + "\n"
@@ -60,10 +62,10 @@ def parse(inputFileName: str) -> str:
         file = remove_comments(inputFile.read())
         file = convert_strings(file, '(".*?")')   # replace strng literals
         file = convert_strings(file, "[\\w\\d]+")    # replace words
-        # file = convert_strings(file, "[^\\w^\\s]+", padding=" ")    # replace punctuation and other characters
+        file = convert_strings(file, "[^\\w^\\s]+", padding=" ")    # replace punctuation and other characters
 
-        print(file)
-    print(str(PREPROCESSOR_DEFINES))
+    code: str = "".join([f"#define {e_word} {original}\n" for original, e_word in PREPROCESSOR_DEFINES.items()])
+    code += file
     return code
 
 
