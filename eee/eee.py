@@ -19,6 +19,7 @@ def generate_e(original: str) -> str:
             if original not in PREPROCESSOR_DEFINES.keys()
             else PREPROCESSOR_DEFINES[original]
         )
+        # print(f"replacing: {original} -> {PREPROCESSOR_DEFINES[original]}")
         return PREPROCESSOR_DEFINES[original]
     else:
         return original
@@ -32,30 +33,59 @@ def remove_comments(input: str) -> str:
     return res
 
 
-def convert(input: str, regex: str, padding: str = "") -> str:
-    res: str = ""
+def generate_tokens(input: str, regex: str) -> None:
     matcher = re.compile(regex)
-
-    for i, line in enumerate(input.split("\n")):
+    for line in input.split("\n"):
         if not line.strip().startswith("#"):
-            strings = re.findall(matcher, line)
-            if len(strings) > 0:
-                for string in strings:
-                    line: str = line.replace(
-                        string, f"{padding}{generate_e(string)}{padding}"
-                    )
+            matches = re.findall(matcher, line)
+            for string in matches:
+                generate_e(string)
+
+
+def escape(token: str) -> str:
+    return "".join(
+        [f"\\{letter}" if not letter.isalpha() and not letter.isnumeric() else letter for letter in list(token)]
+    )
+
+
+def convert(input: str, padding: str) -> str:
+    tokens: list = list(PREPROCESSOR_DEFINES.keys())
+    tokens.sort(reverse=True, key=len)
+
+    # regex_tokenMatcher = "[^A-Za-z0-9]{1}token[^A-Za-z0-9]{1}"
+
+    res: str = ""
+
+    for line in input.split("\n"):
+        if not line.strip().startswith("#"):
+            for token in tokens:
+            # regex = f"[^A-Za-z0-9]{escape(token)}[^A-Za-z0-9]"
+                line = line.replace(token, f"{padding}{PREPROCESSOR_DEFINES[token]}{padding}")
+                # line: str = re.sub(
+                #     regex,
+                #     f"{padding}{PREPROCESSOR_DEFINES[token]}{padding}",
+                #     line,
+                # )
         res += line + "\n"
+
     return res
 
 
 def parse(inputFileName: str) -> str:
     with open(inputFileName, "r") as inputFile:
         file = remove_comments(inputFile.read())
-        file = convert(file, '(".*?")')  # replace strng literals
-        file = convert(file, "[\\w\\d]+")  # replace words
-        file = convert(
-            file, "[^\\w^\\s]+", padding=" "
-        )  # replace punctuation and other characters
+
+        regex_string = '(".*?")'
+        regex_words = "([\\w\\d]+)"
+        regex_symbols = "([^\\w^\\s]+)"
+
+        generate_tokens(file, regex_string)
+        file = convert(file, padding=" ")
+        generate_tokens(file, regex_words)
+        file = convert(file, padding=" ")
+        generate_tokens(file, regex_symbols)
+        file = convert(file, padding=" ")
+
 
     code: str = "".join(
         [
