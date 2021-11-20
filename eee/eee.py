@@ -126,7 +126,10 @@ def parse(inputFileName: str) -> str:
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Not enough arguments!", file=sys.stderr)
+        print(
+            "Not enough arguments!\nUsage: eee.py input_file output_file",
+            file=sys.stderr,
+        )
         exit(2)
     inputFileName = sys.argv[1]
     outputFileName = sys.argv[2]
