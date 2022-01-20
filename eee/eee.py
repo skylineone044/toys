@@ -101,15 +101,13 @@ def parse(inputFileName: str) -> str:
 
         regex_string = '(".*?")'  # matches string literals
         regex_words = "([\\w\\d]+)"
-        regex_symbols = "([^\\w^\\s]+)"
+        regex_symbols = "(\\+\\+|--|<<|>>|==|!=|->|\\|\\||[(){}[\\];,+\\-*/=<>%&?:!])" # double width symbols first, to ensure the parts stay togather
 
         generate_tokens(file, regex_string)  # get string literal conversions to eee
         file = convert(file, padding=" ")  # do the conversion
-        generate_tokens(file, regex_words)  # get the word conversions
+        generate_tokens( file, regex_symbols)  # get the symbol conversions (parens, +, -, <<, etc)
         file = convert(file, padding=" ")  # do the conversion
-        generate_tokens(
-            file, regex_symbols
-        )  # get the symbol conversions (parens, +, -, <<, etc)
+        generate_tokens(file, regex_words)  # get the word conversions
         file = convert(file, padding=" ")  # do the conversion
 
         file = assert_handler(file)
