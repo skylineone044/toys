@@ -85,6 +85,13 @@ def assert_handler(input: str) -> str:
     return res
 
 
+def reduce_whitesapce(file: str):
+    res: str = re.sub(
+        "(?<![^\\w\\d])( {2,})", " ", file
+    )  # replace excessive spaces, not at the begginnings of lines with a " "
+    return res
+
+
 def parse(inputFileName: str) -> str:
     """main part, everything gets started here:
     it reads the input file
@@ -101,7 +108,7 @@ def parse(inputFileName: str) -> str:
 
         regex_string = '(".*?")'  # matches string literals
         regex_words = "([\\w\\d]+)"
-        regex_symbols = "(\\+\\+|--|<<|>>|==|!=|->|<=|>=|<=>|\\|\\||[(){}[\\];,+\\-*/=<>%&?:!.])" # double width symbols first, to ensure the parts stay togather
+        regex_symbols = "(\\+\\+|--|<<|>>|==|!=|->|<=|>=|<=>|\\|\\||[(){}[\\];,+\\-*/=<>%&?:!.])"  # double width symbols first, to ensure the parts stay togather
 
         generate_tokens(file, regex_string)  # get string literal conversions to eee
         file = convert(file, padding=" ")  # do the conversion
@@ -111,6 +118,7 @@ def parse(inputFileName: str) -> str:
         file = convert(file, padding=" ")  # do the conversion
 
         file = assert_handler(file)
+        file = reduce_whitesapce(file)
 
     code = "".join(
         [
