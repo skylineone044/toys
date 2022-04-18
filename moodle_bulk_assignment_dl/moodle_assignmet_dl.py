@@ -12,7 +12,7 @@ def get_individual_assignmet_page_links() -> [str]:
     return [a["href"] for a in soup.find_all("a", attrs={"class": "title"}, href=True)]
 
 
-def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, str]]:
+def get_dl_links(assignmet_page_links: [str], continue_from: int) -> [[str, str]]:
     print("extracting download links, from each sub page, this may take a while...")
     dl_links = []
 
@@ -48,9 +48,9 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
     return dl_links
 
 
-def bulk_download(dl_links: [str], continue_from: int):
+def bulk_download(links: [str], continue_from: int):
     print("downloading files...")
-    for i, link_and_name in enumerate(dl_links):
+    for i, link_and_name in enumerate(links):
         print(f"{i + continue_from}/{len(links) - 1}        ", end='\r')
         # print(f"{link_and_name}")
         name, link = link_and_name
@@ -79,6 +79,6 @@ if __name__ == "__main__":
     links = get_individual_assignmet_page_links()
     # print(f"{links=}")
 
-    dl_links = dl_attachments(links, continue_from)
+    dl_links = get_dl_links(links, continue_from)
     bulk_download(dl_links[continue_from:], continue_from)
     print("done.")
