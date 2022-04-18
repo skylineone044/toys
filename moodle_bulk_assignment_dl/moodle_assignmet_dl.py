@@ -1,3 +1,4 @@
+import time
 import requests
 import sys
 import json
@@ -53,13 +54,21 @@ def bulk_download(dl_links: [str], continue_from: int):
         # print(f"{link_and_name}")
         name, link = link_and_name
         path = f"{DL_DIR}/{i+continue_from:03}_{name}.{DEFAULT_FILE_EXT}"
-        r = requests.get(link, cookies=COOKIES, stream=True)
-        if r.status_code == 200:
-            with open(path, 'wb') as f:
-                for chunk in r:
-                    f.write(chunk)
-        else:
-            print("baj")
+        while True:
+            try:
+                r = requests.get(link, cookies=COOKIES, stream=True, timeout=5)
+                if r.status_code == 200:
+                    with open(path, 'wb') as f:
+                        for chunk in r:
+                            f.write(chunk)
+                else:
+                    print(f"Http error: {r.status_code}")
+                break
+            except requests.exceptions.ConnectionError:
+                print("timed out, waiting 5s...")
+                time.sleep(5)
+                continue
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -70,4 +79,5 @@ if __name__ == "__main__":
     # print(f"{links=}")
 
     dl_links = dl_attachments(links, continue_from)
-    bulk_download(dl_links, continue_from)
+    bulk_download(dl_links[continue_from:], continue_from)
+    print("done.")
