@@ -12,7 +12,7 @@ def get_individual_assignmet_page_links() -> [str]:
     return [a["href"] for a in soup.find_all("a", attrs={"class": "title"}, href=True)]
 
 
-def get_dl_links(assignmet_page_links: [str], continue_from: int) -> [[str, str]]:
+def get_dl_links(assignmet_page_links: [str]) -> [[str, str]]:
     print("extracting download links, from each sub page, this may take a while...")
     dl_links = []
 
@@ -28,18 +28,23 @@ def get_dl_links(assignmet_page_links: [str], continue_from: int) -> [[str, str]
                 raise FileNotFoundError
     except FileNotFoundError:
         for i, link in enumerate(assignmet_page_links):
-            if i >= continue_from:
-                print(f"{i}/{len(assignmet_page_links) - 1}        ", end='\r')
-                page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES).text, features="lxml")
-                file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul",
-                                                                                          attrs={"class": "files"})
-                name = page_soup.find("div", attrs={"class": "fullname"}).find("a", href=True).text
-                dl_links.append([
-                    name,
-                    [link.find("a", href=True)["href"] for link in
-                     file_list_ul.find_all("li", {"class": "application/zip"})][0]
-                ]
-                )
+            while True:
+                try:
+                    print(f"{i}/{len(assignmet_page_links) - 1}        ", end='\r')
+                    page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES, timeout=5).text, features="lxml")
+                    file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul", attrs={"class": "files"})
+                    name = page_soup.find("div", attrs={"class": "fullname"}).find("a", href=True).text
+                    dl_links.append([
+                        name,
+                        [link.find("a", href=True)["href"] for link in
+                         file_list_ul.find_all("li", {"class": "application/zip"})][0]
+                    ]
+                    )
+                    break
+                except:
+                    print("timeout, waiting 5s...")
+                    time.sleep(5)
+                    continue
 
         # print(f"{dl_links=}")
         with open("link_cache.json", 'w') as file:
@@ -79,6 +84,6 @@ if __name__ == "__main__":
     links = get_individual_assignmet_page_links()
     # print(f"{links=}")
 
-    dl_links = get_dl_links(links, continue_from)
+    dl_links = get_dl_links(links)
     bulk_download(dl_links[continue_from:], continue_from)
     print("done.")
