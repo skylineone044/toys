@@ -34,12 +34,18 @@ def get_dl_links(assignmet_page_links: [str]) -> [[str, str]]:
                     page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES, timeout=5).text, features="lxml")
                     file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul", attrs={"class": "files"})
                     name = page_soup.find("div", attrs={"class": "fullname"}).find("a", href=True).text
-                    dl_links.append([
-                        name,
-                        [link.find("a", href=True)["href"] for link in
-                         file_list_ul.find_all("li", {"class": "application/zip"})][0]
-                    ]
-                    )
+                    if file_list_ul is None:
+                        print(f"No file section found, skipping {i:03}: {name}")
+                    else:
+                        try:
+                            dl_links.append([
+                                name,
+                                [link.find("a", href=True)["href"] for link in
+                                 file_list_ul.find_all("li", {"class": "application/zip"})][0]
+                            ]
+                            )
+                        except IndexError:
+                            print(f"No valid file found, skipping {i:03}: {name}")
                     break
                 except requests.exceptions.ConnectionError:
                     print("timeout, waiting 5s...")
