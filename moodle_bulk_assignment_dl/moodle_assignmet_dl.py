@@ -56,7 +56,7 @@ def get_dl_links(assignmet_page_links: [str]) -> [[str, str]]:
 def bulk_download(links: [str], continue_from: int):
     print("downloading files...")
     for i, link_and_name in enumerate(links):
-        print(f"{i + continue_from}/{len(links) - 1}        ", end='\r')
+        print(f"{i + continue_from}/{len(links) + continue_from - 1}        ", end='\r')
         # print(f"{link_and_name}")
         name, link = link_and_name
         path = f"{DL_DIR}/{i + continue_from:03}_{name}.{DEFAULT_FILE_EXT}"
