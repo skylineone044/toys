@@ -15,7 +15,7 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
 
     for i, link in enumerate(links):
         if i >= continue_from:
-            print(f"{i}/{len(links)}", end='\r')
+            print(f"{i}/{len(links)}        ", end='\r')
             page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES).text, features="lxml")
             file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul", attrs={"class": "files"})
             name = page_soup.find("div", attrs={"class": "fullname"}).find("a", href=True).text
@@ -32,7 +32,7 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
 def bulk_download(dl_links: [str], continue_from: int):
     print("downloading files...")
     for i, link_and_name in enumerate(dl_links):
-        print(f"{i+continue_from-1}/{len(links)}", end='\r')
+        print(f"{i+continue_from-1}/{len(links)}        ", end='\r')
         # print(f"{link_and_name}")
         name, link = link_and_name
         path = f"{DL_DIR}/{i+continue_from:03}_{name}.{DEFAULT_FILE_EXT}"
