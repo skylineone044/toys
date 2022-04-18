@@ -93,6 +93,6 @@ if __name__ == "__main__":
 
         dl_links = get_dl_links(links)
         bulk_download(dl_links[continue_from:], continue_from)
-        print("done.")
+        print("done.        ")
     except KeyboardInterrupt:
         print("\nInterrupted by user")
