@@ -41,7 +41,7 @@ def get_dl_links(assignmet_page_links: [str]) -> [[str, str]]:
                     ]
                     )
                     break
-                except:
+                except requests.exceptions.ConnectionError:
                     print("timeout, waiting 5s...")
                     time.sleep(5)
                     continue
@@ -77,13 +77,16 @@ def bulk_download(links: [str], continue_from: int):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        continue_from = int(sys.argv[1])
-    else:
-        continue_from = 0
-    links = get_individual_assignmet_page_links()
-    # print(f"{links=}")
+    try:
+        if len(sys.argv) > 1:
+            continue_from = int(sys.argv[1])
+        else:
+            continue_from = 0
+        links = get_individual_assignmet_page_links()
+        # print(f"{links=}")
 
-    dl_links = get_dl_links(links)
-    bulk_download(dl_links[continue_from:], continue_from)
-    print("done.")
+        dl_links = get_dl_links(links)
+        bulk_download(dl_links[continue_from:], continue_from)
+        print("done.")
+    except KeyboardInterrupt:
+        print("\nInterrupted by user")
