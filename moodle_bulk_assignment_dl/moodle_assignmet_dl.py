@@ -1,5 +1,6 @@
 import requests
 import sys
+import json
 from bs4 import BeautifulSoup
 from settings import *
 
@@ -13,19 +14,35 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
     print("extracting download links, from each sub page, this may take a while...")
     dl_links = []
 
-    for i, link in enumerate(links):
-        if i >= continue_from:
-            print(f"{i}/{len(links)}        ", end='\r')
-            page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES).text, features="lxml")
-            file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul", attrs={"class": "files"})
-            name = page_soup.find("div", attrs={"class": "fullname"}).find("a", href=True).text
-            dl_links.append([
-                name,
-                [link.find("a", href=True)["href"] for link in file_list_ul.find_all("li", {"class": "application/zip"})][0]
-            ]
-            )
+    try:
+        with open("link_cache.json", 'r') as file:
+            jsonData = json.load(file)
+            source_url = jsonData["source_url"]
+            links = jsonData["dl_links"]
+            if source_url == DL_PAGE_ADDR:
+                dl_links = links
+                print("using cached list!")
+            else:
+                raise FileNotFoundError
+    except FileNotFoundError:
+        for i, link in enumerate(assignmet_page_links):
+            if i >= continue_from:
+                print(f"{i}/{len(assignmet_page_links)}        ", end='\r')
+                page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES).text, features="lxml")
+                file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul",
+                                                                                          attrs={"class": "files"})
+                name = page_soup.find("div", attrs={"class": "fullname"}).find("a", href=True).text
+                dl_links.append([
+                    name,
+                    [link.find("a", href=True)["href"] for link in
+                     file_list_ul.find_all("li", {"class": "application/zip"})][0]
+                    ]
+                )
 
-    # print(f"{dl_links=}")
+        # print(f"{dl_links=}")
+        with open("link_cache.json", 'w') as file:
+            json.dump({"source_url": DL_PAGE_ADDR, "dl_links": dl_links}, file, indent=4)
+
     return dl_links
 
 
