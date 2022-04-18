@@ -5,6 +5,7 @@ import json
 from bs4 import BeautifulSoup
 from settings import *
 
+
 def get_individual_assignmet_page_links() -> [str]:
     print("getting list table page html...")
     soup = BeautifulSoup(requests.post(DL_PAGE_ADDR, cookies=COOKIES).text, features="lxml")
@@ -28,7 +29,7 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
     except FileNotFoundError:
         for i, link in enumerate(assignmet_page_links):
             if i >= continue_from:
-                print(f"{i}/{len(assignmet_page_links)-1}        ", end='\r')
+                print(f"{i}/{len(assignmet_page_links) - 1}        ", end='\r')
                 page_soup = BeautifulSoup(requests.post(link, cookies=COOKIES).text, features="lxml")
                 file_list_ul = page_soup.find("div", attrs={"class": "attachments"}).find("ul",
                                                                                           attrs={"class": "files"})
@@ -37,7 +38,7 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
                     name,
                     [link.find("a", href=True)["href"] for link in
                      file_list_ul.find_all("li", {"class": "application/zip"})][0]
-                    ]
+                ]
                 )
 
         # print(f"{dl_links=}")
@@ -50,10 +51,10 @@ def dl_attachments(assignmet_page_links: [str], continue_from: int) -> [[str, st
 def bulk_download(dl_links: [str], continue_from: int):
     print("downloading files...")
     for i, link_and_name in enumerate(dl_links):
-        print(f"{i+continue_from}/{len(links)-1}        ", end='\r')
+        print(f"{i + continue_from}/{len(links) - 1}        ", end='\r')
         # print(f"{link_and_name}")
         name, link = link_and_name
-        path = f"{DL_DIR}/{i+continue_from:03}_{name}.{DEFAULT_FILE_EXT}"
+        path = f"{DL_DIR}/{i + continue_from:03}_{name}.{DEFAULT_FILE_EXT}"
         while True:
             try:
                 r = requests.get(link, cookies=COOKIES, stream=True, timeout=5)
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         continue_from = int(sys.argv[1])
     else:
-         continue_from = 0
+        continue_from = 0
     links = get_individual_assignmet_page_links()
     # print(f"{links=}")
 
