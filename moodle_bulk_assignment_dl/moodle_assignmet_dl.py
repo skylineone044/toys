@@ -1,11 +1,7 @@
 import requests
+import sys
 from bs4 import BeautifulSoup
-
-COOKIES = {"MoodleSession": "INSERT YOUR MOODLE COOKIE HERE"}
-DL_PAGE_ADDR = "INSERT YOUR MOODLE HUB TABLE PAGE ADDRESS HERE"  # for example: "https://moodle2.inf.u-szeged.hu/moodle38/mod/workshop/view.php?id=81" it works best if you set to see all entries in the moodle web interface, so the sript actually sees all the links, as it will not step through the pages for you
-DL_DIR = "/home/skyline/Downloads/bulk_moodle/cmd"  # set the directory for the results to be saved to
-DEFAULT_FILE_EXT = "zip"  # resutl file extenison
-
+from settings import *
 
 def get_individual_assignmet_page_links() -> [str]:
     print("getting list table page html...")
@@ -28,26 +24,31 @@ def dl_attachments(assignmet_page_links: [str]) -> [[str, str]]:
         ]
         )
 
-    print(f"{dl_links=}")
+    # print(f"{dl_links=}")
     return dl_links
 
 
-def bulk_download(dl_links: [str]):
+def bulk_download(dl_links: [str], continue_from: int):
     print("downloading files...")
     for i, link_and_name in enumerate(dl_links):
-        print(f"{i}/{len(links)}", end='\r')
-        # print(f"{link_and_name}")
-        name, link = link_and_name
-        path = f"{DL_DIR}/{i:03}_{name}.{DEFAULT_FILE_EXT}"
-        r = requests.get(link, cookies=COOKIES, stream=True)
-        if r.status_code == 200:
-            with open(path, 'wb') as f:
-                for chunk in r:
-                    f.write(chunk)
+        if i >= continue_from:
+            print(f"{i}/{len(links)}", end='\r')
+            # print(f"{link_and_name}")
+            name, link = link_and_name
+            path = f"{DL_DIR}/{i:03}_{name}.{DEFAULT_FILE_EXT}"
+            r = requests.get(link, cookies=COOKIES, stream=True)
+            if r.status_code == 200:
+                with open(path, 'wb') as f:
+                    for chunk in r:
+                        f.write(chunk)
 
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        continue_from = sys.argv[1]
+    else:
+         continue_from = 0
+    links = get_individual_assignmet_page_links()
+    # print(f"{links=}")
 
-links = get_individual_assignmet_page_links()
-print(f"{links=}")
-
-dl_links = dl_attachments(links)
-bulk_download(dl_links)
+    dl_links = dl_attachments(links)
+    bulk_download(dl_links, continue_from)
