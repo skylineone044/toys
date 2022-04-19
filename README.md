@@ -17,3 +17,7 @@ pose a problem, and I only chose to deal with the `include` and `assert` macros
 generate the julia sets of the mandlebrot set, given the requred parameters,
 with the ability of generating still images, and animations as png sequences,
 with multiple interpolation modes: line, circle
+
+## moodle_assignmet_dl.py
+
+Download handed in peer-review assignments from Moodle3 in bulk
