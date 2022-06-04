@@ -27,15 +27,15 @@ from matplotlib import cm
 # a többi nagyjából magátór értetődő
 
 THREADS = (
-    15  # minimum 2 kell hogy legyen, a sliceok szelessegenek korrekt kiszamitasahoz
+    50  # minimum 2 kell hogy legyen, a sliceok szelessegenek korrekt kiszamitasahoz
 )
 PATH = str(pathlib.Path(__file__).parent.resolve()) + "/julia.pgm"
 
 
 # WIDTH = 50000
 # HEIGHT = 32352
-WIDTH = 1280
-HEIGHT = 720
+WIDTH = 1920
+HEIGHT = 1080
 C = complex(-0.8, 0.156)
 
 MAX_Z = 5
@@ -212,10 +212,10 @@ def single_image():
 if __name__ == "__main__":
     pass
     # make it go
-    # single_image()
+    single_image()
     # anim_ft(240, complex(0, -0.8), complex(-0.8, 0.156))
     # anim_circle(1024, 0.75)
-    anim_circle(1200, 0.7885)
+    # anim_circle(1024, 0.7885)
 
 #       ████████
 #     ██▒▒▒▒▒▒▒▒▒▒██
